@@ -1,5 +1,12 @@
 *.class
 *.log
+*~
+java.hprof.txt
+
+# idea
+*.ipr
+*.iws
+.idea
 
 # sbt specific
 .cache
