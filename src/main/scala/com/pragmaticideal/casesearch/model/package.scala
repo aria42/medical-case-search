@@ -1,6 +1,7 @@
 package com.pragmaticideal.casesearch
 
 import java.io.{FileInputStream, InputStream, File}
+import java.util.zip.GZIPInputStream
 
 import scala.pickling.Defaults._
 import scala.pickling.binary._
@@ -38,7 +39,11 @@ package object model {
     }
 
     def fromFile(f: File): Iterator[ResearchArticle] = {
-      fromInputStream(new FileInputStream(f))
+      var is: InputStream = new FileInputStream(f)
+      if (f.getAbsolutePath.endsWith(".gz")) {
+        is = new GZIPInputStream(is)
+      }
+      fromInputStream(is)
     }
   }
 

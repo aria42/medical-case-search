@@ -11,6 +11,7 @@ object MedicalCaseSearchBuild extends Build {
   val Version = "0.1.0-SNAPSHOT"
   val ScalaVersion = "2.11.6"
   val ScalatraVersion = "2.3.0"
+  val LuceneVersion = "5.2.1"
 
   lazy val project = Project (
     "medical-case-search",
@@ -34,6 +35,9 @@ object MedicalCaseSearchBuild extends Build {
         "commons-io" % "commons-io" % "2.4",
         "org.apache.commons" % "commons-compress" % "1.9",
         "com.github.scopt" %% "scopt" % "3.3.0",
+        // Lucene
+        "org.apache.lucene" % "lucene-core" % LuceneVersion,
+        "org.apache.lucene" % "lucene-analyzers-common" % LuceneVersion,
         // Servlet basics
         "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
         "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container",
