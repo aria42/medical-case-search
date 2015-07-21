@@ -20,10 +20,14 @@ object PubMedXMLIngest {
   val docTypeRegex = "<!DOCTYPE.*?>"
 
   def loadXML(source: scala.io.Source): Elem = {
+    // Don't require the entity definition to parse XML
     val sml = source.mkString.replaceAll(docTypeRegex,"")
     XML.loadString(sml)
   }
 
+  /**
+   * All files recursiely from input directory
+   */
   def allFiles(dir: File): Seq[File] = {
     require(dir.isDirectory)
     for {
@@ -33,14 +37,28 @@ object PubMedXMLIngest {
     } yield c
   }
 
+  /**
+   * Measure how long a block computation takes
+   * and print the time and return the value. Can be used to capture
+   * <code>
+   *   val someValue = time("Computing value") {
+   *      computeSomeValue()
+   *   }
+   * </code>
+   */
   def time[R](msg: String)(block: => R): R = {
-    val t0 = System.currentTimeMillis()
+    val start = System.currentTimeMillis()
     val result = block
-    val t1 = System.currentTimeMillis()
-    println(s"$msg Elapsed time: " + (t1 - t0) + "ms")
+    val stop = System.currentTimeMillis()
+    println(s"$msg (Elapsed time: ${stop-start}ms")
     result
   }
 
+  /**
+   * We have a bunch of predicates and we'd like to prefer the output
+   * of the first predicate to the second, etc. This is useful for poorly
+   * defined XML schemas.
+   */
   def cascadedSearch[T](xs: Seq[T], preds: Seq[T => Boolean]): Option[T] = {
     for (p <- preds; x <- xs) {
       if (p(x)) {
@@ -50,6 +68,10 @@ object PubMedXMLIngest {
     None
   }
 
+  /**
+   * Return a predicate function on a XML node which checks for having attribute `key` with
+   * value `val`
+   */
   def hasAttributeFn(key: String, `val`: String): Node => Boolean = e => e \@ key == `val`
 
   def fromXML(elem: Elem): ResearchArticle = {
@@ -75,6 +97,9 @@ object PubMedXMLIngest {
       abstractSections.toList, keyPhrases.toList)
   }
 
+  /**
+   * Make an iterator over the Tar file entries in a Gzipped Tar archive
+   */
   def gzipTarFile(path: String): Iterator[String] = {
     val gzipInput = new GZIPInputStream(new FileInputStream(new File(path)))
     val tarInput = new TarArchiveInputStream(gzipInput)
@@ -108,6 +133,9 @@ object PubMedXMLIngest {
     }
   }
 
+  /**
+   * Options meant for command-line
+   */
   case class Opts(
     val inputPaths: Seq[File] = Seq(),
     val outputDir: File = null,
@@ -116,12 +144,16 @@ object PubMedXMLIngest {
 
   def run(opts: Opts): Unit = {
     val it = opts.inputPaths.iterator.flatMap(f => gzipTarFile(f.getAbsolutePath))
+    // want to parallize computation but since it's an iterator we don't know
+    // how big it is so we read a chunk of `opts.batchSize` from the iterator
+    // and compute over the batch in parallel
     for ((group, cnt) <- it.grouped(opts.batchSize).zipWithIndex) {
       val outPath = new File(opts.outputDir, s"articles-$cnt.binary.gz")
       val gzipOut = new GZIPOutputStream(new FileOutputStream(outPath))
       val articles = time("Read XML and extract") {
         group.seq.par.map { xmlStr =>
           val xml = loadXML(scala.io.Source.fromString(xmlStr))
+          // only interested in research articles
           if (xml \@ "article-type" == "research-article") {
             try {
               Some(fromXML(xml))
@@ -135,12 +167,10 @@ object PubMedXMLIngest {
           }
         }.seq.filter(_.isDefined).map(_.get)
       }
-      var numWritten = 0
       time("Writing articles") {
         for (a <- articles) {
           try {
             gzipOut.write(a.toBytes)
-            numWritten += 1
           } catch {
             case t: Throwable =>
               println("Error serializing article")
