@@ -3,7 +3,7 @@ package com.pragmaticideal.casesearch.offline
 import java.io.{OutputStreamWriter, FileOutputStream, FileWriter, File}
 import java.util.zip.GZIPOutputStream
 import com.pragmaticideal.casesearch.IO
-import com.pragmaticideal.casesearch.model.{ResearchArticle, AbstractSection, Author}
+import com.pragmaticideal.casesearch.Model.{ResearchArticle, AbstractSection, Author}
 import org.apache.commons.io.output.WriterOutputStream
 
 import scala.xml.{Elem, XML, Node}

@@ -4,7 +4,7 @@ import java.io.{FileInputStream, InputStreamReader, File}
 import java.nio.file.Paths
 import java.util.concurrent.{TimeUnit, Executors}
 import java.util.zip.GZIPInputStream
-import com.pragmaticideal.casesearch.model.ResearchArticle
+import com.pragmaticideal.casesearch.Model.ResearchArticle
 import com.pragmaticideal.casesearch.IO
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.store._

@@ -1,7 +1,6 @@
 package com.pragmaticideal.casesearch
 
-package object model {
-
+object Model {
   class ResearchArticle(
     val journalTitle: String,
     val pmcId: String,
@@ -14,8 +13,5 @@ package object model {
 
   case class AbstractSection(title: String, text: String)
 
-  case class Author(
-    firstName: String,
-    lastName: String
-  )
+  case class Author(firstName: String, lastName: String)
 }
