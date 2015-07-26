@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": true,
+        "preserveConstEnums": true,
+        "out": "../WEB-INF/js/ts-compiled.js",
+        "sourceMap": true
+    },
+    "fileGlobs": [
+        "src/**.ts",
+	      "typings/**.ts"
+    ]
+}

@@ -1,11 +1,11 @@
 package com.pragmaticideal.casesearch.offline
 
-import java.io.{InputStreamReader, FileInputStream, FileOutputStream, File}
-import java.util.zip.{GZIPInputStream, GZIPOutputStream}
+import java.io.{OutputStreamWriter, FileOutputStream, FileWriter, File}
+import java.util.zip.GZIPOutputStream
+import com.pragmaticideal.casesearch.IO
 import com.pragmaticideal.casesearch.model.{ResearchArticle, AbstractSection, Author}
-import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveInputStream}
+import org.apache.commons.io.output.WriterOutputStream
 
-import scala.util.control.Breaks
 import scala.xml.{Elem, XML, Node}
 
 /**
@@ -16,25 +16,12 @@ import scala.xml.{Elem, XML, Node}
  */
 object PubMedXMLIngest {
 
-  val suffix = ".nxml"
   val docTypeRegex = "<!DOCTYPE.*?>"
 
   def loadXML(source: scala.io.Source): Elem = {
     // Don't require the entity definition to parse XML
     val sml = source.mkString.replaceAll(docTypeRegex,"")
     XML.loadString(sml)
-  }
-
-  /**
-   * All files recursiely from input directory
-   */
-  def allFiles(dir: File): Seq[File] = {
-    require(dir.isDirectory)
-    for {
-      f <- dir.listFiles()
-      c <- if (f.isDirectory) allFiles(f) else Seq(f)
-      if c.getName.endsWith(suffix)
-    } yield c
   }
 
   /**
@@ -50,7 +37,7 @@ object PubMedXMLIngest {
     val start = System.currentTimeMillis()
     val result = block
     val stop = System.currentTimeMillis()
-    println(s"$msg (Elapsed time: ${stop-start}ms")
+    println(s"$msg (Elapsed time: ${stop-start}ms)")
     result
   }
 
@@ -97,41 +84,6 @@ object PubMedXMLIngest {
       abstractSections.toList, keyPhrases.toList)
   }
 
-  /**
-   * Make an iterator over the Tar file entries in a Gzipped Tar archive
-   */
-  def gzipTarFile(path: String): Iterator[String] = {
-    val gzipInput = new GZIPInputStream(new FileInputStream(new File(path)))
-    val tarInput = new TarArchiveInputStream(gzipInput)
-    def nextFileEntry(): TarArchiveEntry = {
-      val entry = tarInput.getNextTarEntry
-      if (entry != null && entry.isDirectory) nextFileEntry
-      else entry
-    }
-    var entry = nextFileEntry()
-    new Iterator[String] {
-      override def hasNext: Boolean = tarInput.getCurrentEntry != null
-
-      override def next(): String = {
-        val size = entry.getSize.toInt
-        val buffer = new Array[Byte](size)
-        var numTotalRead = 0
-        val loop = new Breaks
-        loop.breakable {
-          while (true) {
-            val read = tarInput.read(buffer, numTotalRead, size - numTotalRead)
-            if (read < 0) {
-              loop.break
-            }
-            numTotalRead += read
-          }
-        }
-        require(numTotalRead == size, s"Entry not size promised $numTotalRead != $size")
-        entry = nextFileEntry()
-        new String(buffer)
-      }
-    }
-  }
 
   /**
    * Options meant for command-line
@@ -143,13 +95,13 @@ object PubMedXMLIngest {
   )
 
   def run(opts: Opts): Unit = {
-    val it = opts.inputPaths.iterator.flatMap(f => gzipTarFile(f.getAbsolutePath))
+    val it = opts.inputPaths.iterator.flatMap(f => IO.gzipTarFile(f.getAbsolutePath))
     // want to parallize computation but since it's an iterator we don't know
     // how big it is so we read a chunk of `opts.batchSize` from the iterator
     // and compute over the batch in parallel
     for ((group, cnt) <- it.grouped(opts.batchSize).zipWithIndex) {
-      val outPath = new File(opts.outputDir, s"articles-$cnt.binary.gz")
-      val gzipOut = new GZIPOutputStream(new FileOutputStream(outPath))
+      val outPath = new File(opts.outputDir, s"articles-$cnt.json.gz")
+      val writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outPath)))
       val articles = time("Read XML and extract") {
         group.seq.par.map { xmlStr =>
           val xml = loadXML(scala.io.Source.fromString(xmlStr))
@@ -168,16 +120,9 @@ object PubMedXMLIngest {
         }.seq.filter(_.isDefined).map(_.get)
       }
       time("Writing articles") {
-        for (a <- articles) {
-          try {
-            gzipOut.write(a.toBytes)
-          } catch {
-            case t: Throwable =>
-              println("Error serializing article")
-          }
-        }
+        IO.writeJsonValues(writer, articles.iterator)
       }
-      gzipOut.close()
+      writer.close()
       println(s"Done with $outPath")
     }
   }

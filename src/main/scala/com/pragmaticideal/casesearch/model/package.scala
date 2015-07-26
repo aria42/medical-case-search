@@ -1,12 +1,5 @@
 package com.pragmaticideal.casesearch
 
-import java.io.{FileInputStream, InputStream, File}
-import java.util.zip.GZIPInputStream
-
-import scala.pickling.Defaults._
-import scala.pickling.binary._
-import scala.util.Try
-
 package object model {
 
   class ResearchArticle(
@@ -18,9 +11,6 @@ package object model {
     val abstractSections: List[AbstractSection],
     val keyPhrases: List[String] = List.empty
   )
-  {
-    def toBytes: Array[Byte] = this.pickle.value
-  }
 
   case class AbstractSection(title: String, text: String)
 
@@ -28,23 +18,4 @@ package object model {
     firstName: String,
     lastName: String
   )
-
-  object ResearchArticle {
-    def fromInputStream(inputStream: InputStream): Iterator[ResearchArticle] = {
-      val pickle = BinaryPickle(inputStream)
-      Iterator
-        .continually(Try(pickle.unpickle[ResearchArticle]).toOption)
-        .takeWhile(_.isDefined)
-        .map(_.get)
-    }
-
-    def fromFile(f: File): Iterator[ResearchArticle] = {
-      var is: InputStream = new FileInputStream(f)
-      if (f.getAbsolutePath.endsWith(".gz")) {
-        is = new GZIPInputStream(is)
-      }
-      fromInputStream(is)
-    }
-  }
-
 }

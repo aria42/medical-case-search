@@ -38,10 +38,15 @@ object MedicalCaseSearchBuild extends Build {
         // Lucene
         "org.apache.lucene" % "lucene-core" % LuceneVersion,
         "org.apache.lucene" % "lucene-analyzers-common" % LuceneVersion,
+        "org.apache.lucene" % "lucene-queryparser" % LuceneVersion,
         // Servlet basics
         "ch.qos.logback" % "logback-classic" % "1.1.2" % "runtime",
-        "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310" % "container",
-        "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided"
+        "org.eclipse.jetty" % "jetty-webapp" % "9.2.10.v20150310",
+        "org.eclipse.jetty" % "jetty-server" % "9.2.10.v20150310",
+        "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
+        // Scalatest
+        "org.scalatest" %% "scalatest" % "2.2.1" % "test" withSources() withJavadoc(),
+        "org.scalacheck" %% "scalacheck" % "1.12.1" % "test" withSources() withJavadoc()
       ),
       scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
         Seq(

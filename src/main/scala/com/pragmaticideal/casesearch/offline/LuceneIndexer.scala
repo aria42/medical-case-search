@@ -1,9 +1,11 @@
 package com.pragmaticideal.casesearch.offline
 
-import java.io.File
+import java.io.{FileInputStream, InputStreamReader, File}
 import java.nio.file.Paths
 import java.util.concurrent.{TimeUnit, Executors}
+import java.util.zip.GZIPInputStream
 import com.pragmaticideal.casesearch.model.ResearchArticle
+import com.pragmaticideal.casesearch.IO
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.store._
 
@@ -43,16 +45,20 @@ object LuceneIndexer {
     doc
   }
 
-  val idxConfig = new IndexWriterConfig(new StandardAnalyzer())
+  def idxConfig = new IndexWriterConfig(new StandardAnalyzer())
 
   class IndexWorker(val workerId: Int, val dataFiles: Seq[File]) extends Runnable {
 
     val ramDir = new RAMDirectory()
 
     override def run(): Unit = {
-
+      println(s"Indexing ${dataFiles.length} files")
       val idxWriter = new IndexWriter(ramDir, idxConfig)
-      for (article <- dataFiles.iterator.flatMap(ResearchArticle.fromFile)) {
+      val allArticles = dataFiles.iterator.flatMap { file =>
+        val reader = new InputStreamReader(new GZIPInputStream(new FileInputStream(file)))
+        IO.readJsonValues[ResearchArticle](reader)
+      }
+      for (article <- allArticles) {
         val doc = indexDoc(article)
         idxWriter.addDocument(doc)
         if (idxWriter.numDocs() % 1000  == 0) {
@@ -72,7 +78,9 @@ object LuceneIndexer {
     // Create pool of works to index in their own ram directory
     val pool = Executors.newFixedThreadPool(config.numThreads)
     workers.foreach(pool.submit)
+    pool.shutdown()
     pool.awaitTermination(Long.MaxValue, TimeUnit.MILLISECONDS)
+    pool.shutdownNow()
     // Once down merge indices into a single index
     // this requires 2x mem but is faster than merge to disk
     val memDirs = workers.map(_.ramDir).toArray
@@ -83,6 +91,7 @@ object LuceneIndexer {
     // Copy the merged mem index to disk in one scan
     val fsDir = FSDirectory.open(Paths.get(config.outputIndex.getAbsolutePath))
     copyAll(masterMemDir, fsDir)
+    System.exit(0)
   }
 
   def main(args: Array[String]) {

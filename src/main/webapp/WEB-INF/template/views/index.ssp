@@ -1,0 +1,53 @@
+<html>
+<head>
+    <title>MedSearch</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+        </header>
+        <div class="im-centered">
+            <div class="row" style="margin-top: 5em;">
+                <div class="col-sm-12">
+                    <img class="img-responsive" src="/images/r2d2-head.png">
+                </div>
+            </div>
+            <div class="row" style="margin-top: 1em;">
+                <div class="col-sm-12 text-center">
+                    <h1>MedSearch</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 5em;">
+            <div id="search-input" class="input-group col-sm-8">
+                <input type="text" id="search-field" class="search-query form-control" placeholder="Search" />
+                <span class="input-group-btn">
+                    <button id="search-submit" class="btn btn-danger" type="button">
+                        <span class=" glyphicon glyphicon-search"></span>
+                    </button>
+                </span>
+            </div>
+        </div>
+
+    <div class="row" style="margin-top: 5em;">
+        <div id="search-results" class="col-sm-12">
+
+        </div>
+
+
+        <div style="margin-top: 5em;">
+            <p>&copy; 2015 Pragmatic Idealism, LLC</p>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="/js/ts-compiled.js"></script>
+</body>
+</html>
