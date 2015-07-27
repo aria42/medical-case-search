@@ -24,6 +24,7 @@ class CaseSearchAPIServlet extends ScalatraServlet with JacksonJsonSupport {
     require(jsonConfigPath != null,
       "must pass environmental variable 'server-config.json' to initialize service resource")
     val configStream = getClass.getResourceAsStream(jsonConfigPath)
+    require(configStream != null, s"Couldn't find resource at path $jsonConfigPath")
     val json = scala.io.Source.fromInputStream(configStream).mkString
     val config = parse(json).extract[APIConfig]
     val idxReader = DirectoryReader.open(FSDirectory.open(Paths.get(config.luceneDir)))
