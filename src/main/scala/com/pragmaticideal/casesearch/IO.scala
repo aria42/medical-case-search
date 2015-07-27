@@ -50,22 +50,23 @@ object IO {
     } yield c
   }
 
+  case class TarEntry(name: String, data: Array[Byte])
+
   /**
    * Make an iterator over the Tar file entries in a Gzipped Tar archive
    */
-  def gzipTarFile(path: String): Iterator[String] = {
-    val gzipInput = new GZIPInputStream(new FileInputStream(new File(path)))
-    val tarInput = new TarArchiveInputStream(gzipInput)
+  def tarEntries(inputStream: InputStream): Iterator[TarEntry] = {
+    val tarInput = new TarArchiveInputStream(inputStream)
     def nextFileEntry(): TarArchiveEntry = {
       val entry = tarInput.getNextTarEntry
       if (entry != null && entry.isDirectory) nextFileEntry
       else entry
     }
     var entry = nextFileEntry()
-    new Iterator[String] {
+    new Iterator[TarEntry] {
       override def hasNext: Boolean = tarInput.getCurrentEntry != null
 
-      override def next(): String = {
+      override def next(): TarEntry = {
         val size = entry.getSize.toInt
         val buffer = new Array[Byte](size)
         var numTotalRead = 0
@@ -80,8 +81,9 @@ object IO {
           }
         }
         require(numTotalRead == size, s"Entry not size promised $numTotalRead != $size")
+        val ret = TarEntry(entry.getName, buffer)
         entry = nextFileEntry()
-        new String(buffer)
+        ret
       }
     }
   }

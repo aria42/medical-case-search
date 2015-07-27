@@ -1,7 +1,7 @@
 package com.pragmaticideal.casesearch.offline
 
-import java.io.{OutputStreamWriter, FileOutputStream, File}
-import java.util.zip.GZIPOutputStream
+import java.io.{FileInputStream, OutputStreamWriter, FileOutputStream, File}
+import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 import com.pragmaticideal.casesearch.IO
 import com.pragmaticideal.casesearch.Model.{ResearchArticle, AbstractSection, Author}
 
@@ -94,7 +94,9 @@ object PubMedXMLIngest {
   )
 
   def run(opts: Opts): Unit = {
-    val it = opts.inputPaths.iterator.flatMap(f => IO.gzipTarFile(f.getAbsolutePath))
+    val it: Iterator[IO.TarEntry] = opts.inputPaths
+      .iterator
+      .flatMap(f => IO.tarEntries(new GZIPInputStream(new FileInputStream(f))))
     // want to parallize computation but since it's an iterator we don't know
     // how big it is so we read a chunk of `opts.batchSize` from the iterator
     // and compute over the batch in parallel
@@ -102,7 +104,8 @@ object PubMedXMLIngest {
       val outPath = new File(opts.outputDir, s"articles-$cnt.json.gz")
       val writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(outPath)))
       val articles = time("Read XML and extract") {
-        group.seq.par.map { xmlStr =>
+        group.seq.par.map { case IO.TarEntry(entryName, bytes) =>
+          val xmlStr = new String(bytes)
           val xml = loadXML(scala.io.Source.fromString(xmlStr))
           // only interested in research articles
           if (xml \@ "article-type" == "research-article") {
