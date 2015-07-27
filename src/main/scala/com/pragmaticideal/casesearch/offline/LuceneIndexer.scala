@@ -77,17 +77,22 @@ object LuceneIndexer {
     val workers = groups.zipWithIndex.map { case (group, idx) => new IndexWorker(idx, group) }
     // Create pool of works to index in their own ram directory
     val pool = Executors.newFixedThreadPool(config.numThreads)
-    workers.foreach(pool.submit)
-    pool.shutdown()
-    pool.awaitTermination(Long.MaxValue, TimeUnit.MILLISECONDS)
+    val futures = workers.map(pool.submit)
+    futures.foreach(_.get())
     pool.shutdownNow()
     // Once down merge indices into a single index
     // this requires 2x mem but is faster than merge to disk
+    // in special case of one thread, no extra memory
     val memDirs = workers.map(_.ramDir).toArray
-    val masterMemDir = new RAMDirectory()
-    val masterIdxWriter = new IndexWriter(masterMemDir, idxConfig)
-    masterIdxWriter.addIndexes(memDirs: _*)
-    masterIdxWriter.close()
+    val masterMemDir = if (workers.size > 1) {
+      val mergedDir = new RAMDirectory()
+      val mergedIdxWriter = new IndexWriter(mergedDir, idxConfig)
+      mergedIdxWriter.addIndexes(memDirs: _*)
+      mergedIdxWriter.close()
+      mergedDir
+    } else {
+      memDirs(0)
+    }
     // Copy the merged mem index to disk in one scan
     val fsDir = FSDirectory.open(Paths.get(config.outputIndex.getAbsolutePath))
     copyAll(masterMemDir, fsDir)
