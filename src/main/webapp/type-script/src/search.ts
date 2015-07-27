@@ -3,17 +3,39 @@ var $searchResults = $('#search-results')
 
 interface SearchResult {
   title: string
+  authors: Array<string>
+  journalTitle: string
+  year: number
+}
+
+function ellipsize(str: string, maxChars: number): string {
+  var ellipsis = "..."
+  var numCharsFromStr = maxChars - ellipsis.length;
+  if (str.length <= maxChars) {
+    return str
+  }
+  str.substring(0, numCharsFromStr) + ellipsis
 }
 
 function resultDom(searchResult: SearchResult): HTMLElement  {
-  return $("<li></li>").text(searchResult.title)[0]
+  var $elem = $("<li></li>")
+    .addClass("snippet")
+    .append($("<div></div>")
+              .addClass("title")
+              .text(searchResult.title))
+    .append($("<div></div>").addClass("author")
+            .text(ellipsize(searchResult.authors.join(), 100)))
+    .append($("<div></div>").addClass("journal")
+      .text(searchResult.journalTitle + " (" + searchResult.year + ")"))
+  // pull out the HTMLElement
+  return $elem[0]
 }
 
 function apiCall(query: string) {
   var searchURI = '/api/0.1/search/' + encodeURIComponent(query)
   $.getJSON(searchURI, function(data) {
     $searchResults.empty()
-    var $list = $('<ul></ul>')
+    var $list = $('<ul></ul>').addClass("snippet-results")
     for (var idx in data) {
       $list.append(resultDom(data[idx]))
     }

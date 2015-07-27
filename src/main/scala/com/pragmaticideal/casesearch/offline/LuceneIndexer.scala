@@ -4,7 +4,7 @@ import java.io.{FileInputStream, InputStreamReader, File}
 import java.nio.file.Paths
 import java.util.concurrent.{TimeUnit, Executors}
 import java.util.zip.GZIPInputStream
-import com.pragmaticideal.casesearch.Model.ResearchArticle
+import com.pragmaticideal.casesearch.Model.{ResultDoc, ResearchArticle}
 import com.pragmaticideal.casesearch.IO
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.store._
@@ -40,7 +40,7 @@ object LuceneIndexer {
       doc.add(new Field("keyPhrase", phrase, TextField.TYPE_STORED))
     }
     for (section <- article.abstractSections) {
-      doc.add(new Field(s"abstract-section-${section.title}", section.text, TextField.TYPE_STORED))
+      doc.add(new Field(s"${ResultDoc.abstractSectionPrefix}${section.title}", section.text, TextField.TYPE_STORED))
     }
     doc
   }

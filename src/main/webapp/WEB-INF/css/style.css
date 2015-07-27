@@ -3,6 +3,15 @@
   max-width: 300px;
 }
 
+ul.snippet-results {
+  list-style-type: none;
+  list-style-position: inside;
+}
+
+li.snippet {
+  margin: 1em 0;
+}
+
 .col-centered {
     display:inline-block;
     float:none;

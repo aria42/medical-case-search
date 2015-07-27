@@ -2,9 +2,9 @@ package com.pragmaticideal.casesearch.api
 
 import java.nio.file.Paths
 
+import com.pragmaticideal.casesearch.Model._
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
-import org.apache.lucene.document.Document
 import org.apache.lucene.index.{DirectoryReader}
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.{IndexSearcher}
@@ -38,13 +38,6 @@ class CaseSearchAPIServlet extends ScalatraServlet with JacksonJsonSupport {
     contentType = formats("json")
   }
 
-  case class ResultDoc(title: String)
-
-  object ResultDoc {
-    def fromLuceneDoc(doc: Document): ResultDoc = {
-      ResultDoc(doc.get("title"))
-    }
-  }
 
   get("/doc/:id") {
     params.get("id").map(_.toInt) match {
@@ -60,7 +53,7 @@ class CaseSearchAPIServlet extends ScalatraServlet with JacksonJsonSupport {
         // TODO(aria42) This just does a simple title search
         val query = new QueryParser("title", analyzer).parse(inputQuery)
         for  (searchHit <- idxSearcher.search(query, 10).scoreDocs.toSeq) yield {
-          ResultDoc.fromLuceneDoc(idxSearcher.doc(searchHit.doc))
+          ResultSnippet.fromLuceneDoc(idxSearcher.doc(searchHit.doc))
         }
       case None =>
     }
