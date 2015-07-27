@@ -2,6 +2,9 @@
 *.log
 *~
 java.hprof.txt
+# Never commit data
+src/main/data
+src/main/webapp/WEB-INF/js/compiled
 
 # idea
 *.ipr
