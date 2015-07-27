@@ -1,15 +1,25 @@
 var $searchField = $('#search-field')
 var $searchResults = $('#search-results')
 
+interface SearchResult {
+  title: string
+}
+
+function resultDom(searchResult: SearchResult): HTMLElement  {
+  return $("<li></li>").text(searchResult.title)[0]
+}
+
 function apiCall(query: string) {
   var searchURI = '/api/0.1/search/' + encodeURIComponent(query)
   $.getJSON(searchURI, function(data) {
     $searchResults.empty()
     var $list = $('<ul></ul>')
-    for (result: data) {
-
+    for (var idx in data) {
+      $list.append(resultDom(data[idx]))
     }
-    $searchResults.append($list)
+    $searchResults
+      .append($list)
+      .appendTo($searchResults)
   })
 }
 

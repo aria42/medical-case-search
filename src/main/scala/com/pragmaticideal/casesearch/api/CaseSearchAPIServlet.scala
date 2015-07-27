@@ -44,7 +44,7 @@ class CaseSearchAPIServlet extends ScalatraServlet with JacksonJsonSupport {
       case Some(inputQuery) =>
         // TODO(aria42) This just does a simple title search
         val query = new QueryParser("title", analyzer).parse(inputQuery)
-        for  (searchHit <- idxSearcher.search(query, 1000).scoreDocs.toSeq) yield {
+        for  (searchHit <- idxSearcher.search(query, 10).scoreDocs.toSeq) yield {
           val doc = idxSearcher.doc(searchHit.doc)
           ResultDoc(doc.get("title"))
         }

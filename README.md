@@ -11,7 +11,11 @@
 # Offline Indexing Pipeline
 
 * `PubMedXMLIngest` takes the FTP dump of PubMed open articles and creates JSON representations of the sub-set we care about
-* `LuceneIndexer` creates a Lucene index 
+* `LuceneIndexer` creates a Lucene index
+ 
+# Getting Started With Data
+ 
+* In Dropbox, I have a pre-built [Lucene index](not-yet) over the PubMed 
 
 # Server pieces
  
