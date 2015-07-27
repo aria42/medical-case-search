@@ -25,13 +25,16 @@
         </div>
 
         <div class="row" style="margin-top: 5em;">
-            <div id="search-input" class="input-group col-sm-8">
-                <input type="text" id="search-field" class="search-query form-control" placeholder="Search" />
-                <span class="input-group-btn">
+            <div class="col-sm-12">
+            <div id="search-input" class="col-sm-12 input-group text-center">
+                <input type="text" id="search-field"
+                 class="search-query input-lg form-control" placeholder="Search" />
+                <!-- <span class="input-group-btn">
                     <button id="search-submit" class="btn btn-danger" type="button">
                         <span class=" glyphicon glyphicon-search"></span>
                     </button>
-                </span>
+                </span> -->
+            </div>
             </div>
         </div>
 
@@ -48,6 +51,6 @@
 
     <!-- Javascript -->
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="/js/ts-compiled.js"></script>
+    <script src="/js/compiled/ts.js"></script>
 </body>
 </html>

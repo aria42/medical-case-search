@@ -3,7 +3,7 @@
         "module": "commonjs",
         "noImplicitAny": true,
         "preserveConstEnums": true,
-        "out": "../WEB-INF/js/ts-compiled.js",
+        "out": "../WEB-INF/js/compiled/ts.js",
         "sourceMap": true
     },
     "fileGlobs": [
