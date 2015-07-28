@@ -47,6 +47,10 @@ class CaseSearchAPIServlet extends ScalatraServlet with JacksonJsonSupport {
     }
   }
 
+  get("/index-info") {
+    Map("num-docs" -> idxSearcher.getIndexReader.numDocs())
+  }
+
   get("/search/:query") {
     params.get("query") match {
       case Some(inputQuery) =>

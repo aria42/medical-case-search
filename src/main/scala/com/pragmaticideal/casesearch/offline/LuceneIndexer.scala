@@ -40,7 +40,8 @@ object LuceneIndexer {
       doc.add(new Field("keyPhrase", phrase, TextField.TYPE_STORED))
     }
     for (section <- article.abstractSections) {
-      doc.add(new Field(s"${ResultDoc.abstractSectionPrefix}${section.title}", section.text, TextField.TYPE_STORED))
+      val fieldName = s"${ResultDoc.abstractSectionPrefix}${section.title}"
+      doc.add(new Field(fieldName, section.text, TextField.TYPE_STORED))
     }
     doc
   }

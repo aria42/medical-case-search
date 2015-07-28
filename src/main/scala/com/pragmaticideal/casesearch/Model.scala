@@ -18,14 +18,22 @@ object Model {
 
   case class Author(firstName: String, lastName: String)
 
-  case class ResultSnippet(title: String, authors: List[String], journalTitle: String, year: Int)
+  case class ResultSnippet(
+      title: String,
+      authors: List[String],
+      snippet: String,
+      journalTitle: String,
+      year: Int
+  )
 
   object ResultSnippet {
+    def fromResultDoc(doc: ResultDoc): ResultSnippet = {
+      val introTxt = doc.abstractSections.headOption.map(_.text).getOrElse("")
+      val snippet = introTxt.substring(0, Math.min(introTxt.length, 100))
+      ResultSnippet(doc.title, doc.authors, snippet, doc.journalTitle, doc.year)
+    }
     def fromLuceneDoc(doc: Document): ResultSnippet = {
-      val authors = doc.getFields("author").map(_.stringValue()).toList
-      val journalTitle = doc.get("journalTitle")
-      val pubYear = doc.get("year").toInt
-      ResultSnippet(doc.get("title"), authors, journalTitle, pubYear)
+      fromResultDoc(ResultDoc.fromLuceneDoc(doc))
     }
   }
 
@@ -40,13 +48,15 @@ object Model {
     val abstractSectionPrefix = "abstract-section-"
 
     def fromLuceneDoc(doc: Document): ResultDoc = {
-      val snippet = ResultSnippet.fromLuceneDoc(doc)
+      val authors = doc.getFields("author").map(_.stringValue()).toList
+      val journalTitle = doc.get("journalTitle")
+      val pubYear = doc.get("year").toInt
       val abstractSections = for {
         f <- doc.getFields.toList
         if (f.name().startsWith(abstractSectionPrefix))
         sectionTitle = f.name().substring(abstractSectionPrefix.length)
       } yield AbstractSection(sectionTitle, f.stringValue())
-      ResultDoc(snippet.title, abstractSections, snippet.authors, snippet.journalTitle, snippet.year)
+      ResultDoc(doc.get("title"), abstractSections, authors, journalTitle, pubYear)
     }
   }
 }

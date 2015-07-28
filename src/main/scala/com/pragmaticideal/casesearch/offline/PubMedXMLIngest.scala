@@ -72,12 +72,21 @@ object PubMedXMLIngest {
     ).get
     val year = (pubElem \ "year").text.trim.toInt
     val authors = (elem \\ "contrib-group" \\ "contrib" \\ "name")
-      .map(e => Author((e \ "surname").text, (e \ "given-names").text))
-    val abstractSections = for {
-      sec <- elem \\ "abstract" \\ "sec"
-      sectionTitle = (sec \ "title").text.replaceAll(":\\s*$","")
-      sectionText = (sec \ "p").map(_.text).mkString("\n")
-    } yield AbstractSection(sectionTitle, sectionText)
+      .map(e => Author((e \ "given-names").text, (e \ "surname").text))
+    val abstractElem = elem \\ "abstract"
+    val abstractSectionElems = abstractElem \\ "sec"
+    // If we can identify actual sections in the abstract, pull those
+    // out separately. Otherwise take all the abstract text
+    // and just make a single section out of that
+    val abstractSections = if (abstractSectionElems.nonEmpty) {
+      for {
+        sec <- abstractSectionElems
+        sectionTitle = (sec \ "title").text.replaceAll(":\\s*$","")
+        sectionText = (sec \ "p").map(_.text).mkString("\n")
+      } yield AbstractSection(sectionTitle, sectionText)
+    } else {
+      Seq(AbstractSection("Abstract", abstractElem.text))
+    }
     val keyPhrases = (elem \\ "kwd").map(_.text)
     new ResearchArticle(journalTitle, pmcId, articleTitle, year, authors.toList,
       abstractSections.toList, keyPhrases.toList)

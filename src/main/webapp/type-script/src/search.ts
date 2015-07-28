@@ -6,6 +6,7 @@ interface SearchResult {
   authors: Array<string>
   journalTitle: string
   year: number
+  snippet: string
 }
 
 function ellipsize(str: string, maxChars: number): string {
@@ -18,15 +19,17 @@ function ellipsize(str: string, maxChars: number): string {
 }
 
 function resultDom(searchResult: SearchResult): HTMLElement  {
+  var titleLine = searchResult.title + " - " +
+                  searchResult.journalTitle + " (" + searchResult.year + ")"
   var $elem = $("<li></li>")
     .addClass("snippet")
     .append($("<div></div>")
               .addClass("title")
-              .text(searchResult.title))
+              .text(titleLine))
     .append($("<div></div>").addClass("author")
             .text(ellipsize(searchResult.authors.join(), 100)))
-    .append($("<div></div>").addClass("journal")
-      .text(searchResult.journalTitle + " (" + searchResult.year + ")"))
+    .append($("<div></div>").addClass("abstract")
+            .text(ellipsize(searchResult.snippet, 250)))
   // pull out the HTMLElement
   return $elem[0]
 }
